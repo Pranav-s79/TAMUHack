@@ -18,18 +18,14 @@ static int recordCallback(const void *inputBuffer, void *outputBuffer,
                           PaStreamCallbackFlags statusFlags,
                           void *userData)
 {
-    const float *in = (const float*)inputBuffer;
-    (void) outputBuffer;
+    const float *in = (const float*)inputBuffer; // samples from mic.
+    (void) outputBuffer; // prevent unused variable warnings.
 
-    if (inputBuffer == nullptr) {
-        cerr << "No input detected." << endl;
-    } else {
-        for (unsigned long i = 0; i < framesPerBuffer; i++) {
-            cout << in[i] << " ";
-        }
-        cout << endl;
+    if (inputBuffer == nullptr) { // if there is no input buffer found
+        cerr << "No input detected." << endl; // Error message that is immediately printed to the screen and endl is end line
     }
 
+		// This segment just tells the code top stop running after 5 seconds.
     // Stop after 5 seconds
     auto now = steady_clock::now();
     if (duration_cast<seconds>(now - startTime).count() >= 5) {
@@ -40,31 +36,31 @@ static int recordCallback(const void *inputBuffer, void *outputBuffer,
 }
 
 int main() {
-    Pa_Initialize();
+    Pa_Initialize(); // loads the audio substem for your operating system.
 
-    PaStream *stream;
+    PaStream *stream; // variable where the stream data will go into.
     Pa_OpenDefaultStream(&stream,
-                         1,
-                         0,
-                         paFloat32,
+                         1,		// input channels (mono)
+                         0,		// Output channels
+                         paFloat32, // Sample format
                          SAMPLE_RATE,
                          FRAMES_PER_BUFFER,
                          recordCallback,
-                         nullptr);
+                         nullptr); // No user data
 
-    startTime = steady_clock::now();
-    Pa_StartStream(stream);
+    startTime = steady_clock::now(); 
+    Pa_StartStream(stream); // begins audio processing on the stream. basically starts calling the my callback function continuously to process live audio data.
 
-    cout << "Recording for 5 seconds..." << endl;
+    cout << "Recording for 5 seconds..." << endl; // Outputs this line
 
     // Wait until the stream finishes
-    while (Pa_IsStreamActive(stream) == 1) {
+    while (Pa_IsStreamActive(stream) == 1) { // stop for 50 seconds when the stream is active.
         this_thread::sleep_for(milliseconds(50));
     }
 
-    Pa_StopStream(stream);
-    Pa_CloseStream(stream);
-    Pa_Terminate();
+    Pa_StopStream(stream); // Stop the stream.
+    Pa_CloseStream(stream); // Close the stream.
+    Pa_Terminate(); // Terminate all resources and free the resources. 
 
     cout << "Recording finished!" << endl;
     return 0;
